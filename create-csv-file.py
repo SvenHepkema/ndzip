@@ -39,8 +39,9 @@ def log_data_file(out_file, path: str, data_type: str, n_values: int) -> None:
 
 def main(args):
     for file in get_all_files_in_dir(args.input_dir):
-        n_values = get_n_values_file(file, args.data_type)
-        #n_values = args.n_vecs * VALUES_PER_VEC
+        file_n_values = get_n_values_file(file, args.data_type)
+        n_values = args.n_vecs * VALUES_PER_VEC
+        n_values = min(n_values, file_n_values)
         log_data_file(args.out_file, file, args.data_type, n_values)
 
 

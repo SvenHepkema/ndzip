@@ -3,7 +3,7 @@ cmake -B build -DCMAKE_CUDA_ARCHITECTURES=61 -DCMAKE_BUILD_TYPE=Release -DCMAKE_
 cmake --build build -j
 
 # Run Benchmarks:
-./build/benchmark benchmark-data-description.csv -R 1 -a ndzip-cuda
+./build/benchmark benchmark-data-description.csv -R 2 -a ndzip-cuda > results.out
 
 
 
