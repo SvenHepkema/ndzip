@@ -10,6 +10,7 @@
 #include <ndzip/cuda.hh>
 #include <ndzip/offload.hh>
 
+#include "../../benchmarker.cuh"
 
 namespace ndzip::detail::gpu_cuda {
 
@@ -632,6 +633,8 @@ void cuda_decompressor_impl<Profile>::decompress(
         throw std::runtime_error{"data dimensionality does not match compressor dimensionality"};
     }
 
+		auto benchmarker = custom::Benchmark();
+		benchmarker.start();
     const auto static_size = detail::static_extent<dimensions>{data_size};
     const auto num_hypercubes = detail::num_hypercubes(static_size);
 
@@ -649,6 +652,8 @@ void cuda_decompressor_impl<Profile>::decompress(
                 static_cast<const bits_type *>(in_device_stream), out_device_data, static_size, border_map,
                 num_hypercubes);
     }
+
+		benchmarker.stop<value_type>(out_device_data, static_cast<size_t>(data_size[0]));
 }
 
 template<typename Profile>

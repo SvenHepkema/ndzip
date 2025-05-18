@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdio>
 #include <cstring>
 
 #if NDZIP_SUPPORT_MMAP
@@ -16,6 +17,39 @@ using namespace std::string_literals;
 
 
 namespace ndzip::detail {
+
+namespace added_on {
+template <typename T>
+std::pair<T *, size_t> repeat_buffer_to_n_values(T *input_buffer,
+                                                 const size_t input_n_values,
+                                                 const size_t target_n_values) {
+  T *output_buffer = new T[target_n_values];
+
+	size_t output_buffer_offset = 0;
+	size_t n_empty_values_column = target_n_values;
+	while (n_empty_values_column != 0) {
+		size_t n_values_to_copy = std::min(n_empty_values_column, input_n_values);
+		std::memcpy(output_buffer + output_buffer_offset, input_buffer,
+								n_values_to_copy * sizeof(T));
+		output_buffer_offset += n_values_to_copy;
+		n_empty_values_column -= n_values_to_copy;
+	}
+
+  return std::make_pair(output_buffer, target_n_values);
+}
+
+long get_remaining_file_size(FILE* file) {
+    if (!file) return -1;
+
+    long current_pos = ftell(file);  
+    fseek(file, 0, SEEK_END);       
+    long end_pos = ftell(file);       
+    fseek(file, current_pos, SEEK_SET); 
+
+    return end_pos - current_pos;
+}
+
+}
 
 class stdio_input_stream final : public input_stream {
   public:
@@ -43,11 +77,19 @@ class stdio_input_stream final : public input_stream {
     std::pair<const void *, size_t> read_some(size_t remainder_from_last_chunk) override {
         assert(_n_chunks > 0 || remainder_from_last_chunk == 0);
         assert(remainder_from_last_chunk <= _chunk_size);
-        size_t bytes_to_read = _chunk_size - remainder_from_last_chunk;
+        const size_t bytes_to_buffer = _chunk_size - remainder_from_last_chunk;
+				const size_t bytes_remaining = added_on::get_remaining_file_size(_file);
+				const size_t bytes_to_read = std::min(bytes_remaining, bytes_to_buffer);
+
         memmove(_chunk, static_cast<std::byte *>(_chunk) + remainder_from_last_chunk, remainder_from_last_chunk);
+
         auto bytes_read = fread(static_cast<std::byte *>(_chunk) + remainder_from_last_chunk, 1, bytes_to_read, _file);
         if (bytes_read < bytes_to_read && ferror(_file)) { throw io_error("fread: "s + strerror(errno)); }
-        auto bytes_in_chunk = remainder_from_last_chunk + bytes_read;
+
+				added_on::repeat_buffer_to_n_values<std::byte>(
+						reinterpret_cast<std::byte*>(_chunk), bytes_to_read, bytes_to_buffer);
+
+        auto bytes_in_chunk = remainder_from_last_chunk + bytes_to_buffer;
         if (bytes_in_chunk > 0) { ++_n_chunks; }
         return {_chunk, bytes_in_chunk};
     }

@@ -296,6 +296,15 @@ static std::chrono::microseconds time_cuda_kernel(cudaEvent_t before, cudaEvent_
 
 #endif
 
+namespace added_on {
+void print_compression_ratio(const size_t compressed_size,
+														 const size_t decompressed_size) {
+	const double compression_ratio = static_cast<double>(decompressed_size) / static_cast<double>(compressed_size);
+
+	fprintf(stdout, "GREPTAG[COMPRESSION_RATIO];%f\n",
+					compression_ratio);
+}
+}
 
 template<typename T>
 static benchmark_result benchmark_ndzip_target(
@@ -343,6 +352,8 @@ static benchmark_result benchmark_ndzip_target(
 
     const auto compressed_size = compressed_length * sizeof(compressed_type);
     const auto uncompressed_size = uncompressed_length * sizeof(T);
+
+		added_on::print_compression_ratio(compressed_size, uncompressed_size);
     assert_buffer_equality(input_buffer, decompress_buffer.data(), uncompressed_size);
     return std::move(bench).result(uncompressed_size, compressed_size);
 }

@@ -7,7 +7,8 @@
 
 
 #ifdef __unix__
-#define NDZIP_SUPPORT_MMAP 1
+//#define NDZIP_SUPPORT_MMAP 1
+#define NDZIP_SUPPORT_MMAP 0
 #else
 #define NDZIP_SUPPORT_MMAP 0
 #endif
