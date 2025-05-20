@@ -85,9 +85,6 @@ def add_sample_run_column(df: pl.DataFrame, n_samples: int) -> pl.DataFrame:
         pl.Series("sample_run", list(range(1, n_samples + 1)) * n_unique_kernels),
     )
 
-def clean_up_filename(filename: str) -> str:
-    return os.path.splitext(filename)[0]
-
 def convert_section_to_df(section: str) -> pl.DataFrame:
     compression_ratio = None
     decompression_times = []
@@ -138,7 +135,7 @@ def convert_section_to_df(section: str) -> pl.DataFrame:
                 "avg_exceptions_per_vector": None,
                 "kernel": kernel,
                 "compressor": "ndzip",
-                "file": clean_up_filename(file),
+                "file": file,
                 "n_bytes": n_bytes,
                 "duration_ms": duration,
                 "compression_ratio": compression_ratio,
@@ -167,7 +164,8 @@ def process_compressors() -> tuple[str, pl.DataFrame]:
 
             section += line
 
-            if i % 8 == 0:
+            n_runs = 5
+            if i % (2 + 2 + 2 * n_runs) == 0:
                 sections.append(section.strip())
                 section = ""
 

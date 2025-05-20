@@ -27,7 +27,7 @@ def get_n_values_file(path: str, data_type: str) -> int:
     data_type_size = 4 if data_type == "float" else 8
     assert (
         file_size % data_type_size == 0
-    ), "file size is not a multiple of data_type size"
+    ), f"{path} :: file size is not a multiple of data_type size"
     return file_size // data_type_size
 
 
